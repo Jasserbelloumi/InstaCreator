@@ -1,18 +1,19 @@
-name: Shield Breaker Bot
+name: Pro Shield Breaker
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  crack:
+  run-bot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - name: Install Tools
-        run: pip install selenium requests webdriver-manager
-      - name: Run Attack
+      - name: Install Stealth Tools
+        run: |
+          pip install selenium webdriver-manager requests
+      - name: Execute Attack
         run: python bot.py
