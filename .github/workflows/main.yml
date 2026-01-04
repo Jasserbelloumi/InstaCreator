@@ -1,23 +1,18 @@
-name: InstaBot Cloud
+name: iPhone Stealth Bot
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  run-script:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
       - name: Install Dependencies
-        run: |
-          pip install selenium requests webdriver-manager
-
-      - name: Execution
+        run: pip install selenium webdriver-manager requests
+      - name: Run Bot
         run: python bot.py
