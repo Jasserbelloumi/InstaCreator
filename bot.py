@@ -1,6 +1,5 @@
 import requests
 import random
-import time
 import uuid
 
 TOKEN = "7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc"
@@ -10,49 +9,50 @@ def notify(msg):
     try: requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={'chat_id': CHAT_ID, 'text': msg})
     except: pass
 
-def inject_exploit():
-    # تدوير البروكسيات وتجربة أنواع مختلفة (Socks5 و HTTP)
-    # سنستخدم البروكسيات التي كانت تعطينا Success سابقاً
+def inject_final_exploit():
+    # استخدام بروكسيات SOCKS4 التي أثبتت كفاءتها
     proxy_list = [
         "socks4://192.252.214.20:15864",
         "socks4://192.252.208.70:14282",
-        "http://177.93.49.203:999",
-        "http://103.172.42.105:1111"
+        "socks4://72.195.34.58:4145"
     ]
     
     proxy = random.choice(proxy_list)
     proxies = {"http": proxy, "https": proxy}
     
-    device_id = str(uuid.uuid4())
-    uuid_id = str(uuid.uuid4())
-    
+    # الثغرة: استخدام App-ID الويب الرسمي مع ترويسات أندرويد
     headers = {
-        "User-Agent": "Instagram 311.1.0.32.118 Android (30/11; 480dpi; 1080x2214; samsung; SM-G998B; o1q; exynos2100; en_US; 546937511)",
-        "X-IG-App-ID": "1217981644879628",
-        "X-IG-Device-ID": device_id,
-        "X-IG-Connection-Type": "WIFI",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36",
+        "X-IG-App-ID": "936619743392459", # المعرف العالمي لإنستقرام
+        "X-ASBD-ID": "129477",
+        "X-Instagram-AJAX": "1",
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Referer": "https://www.instagram.com/accounts/emailsignup/"
     }
 
+    # الرابط الجديد لتجاوز الـ 404
+    target_url = "https://www.instagram.com/api/v1/web/accounts/check_username/"
+
     payload = {
-        "username": f"jasser_hero_{random.randint(1000, 9999)}",
-        "_uuid": uuid_id,
-        "device_id": device_id
+        "username": f"jasser.pro.{random.randint(1000, 9999)}",
     }
 
     try:
-        notify(f"🛡️ محاولة تجاوز بروتوكول البروكسي وحقن الثغرة: {proxy}")
-        # استخدام verify=False لتجاوز فحص شهادات البروكسي المزعجة
-        response = requests.post("https://i.instagram.com/api/v1/accounts/check_username/", 
-                                 headers=headers, data=payload, proxies=proxies, timeout=20, verify=False)
+        notify(f"🛠️ محاولة اختراق الرابط الجديد عبر: {proxy}")
+        
+        # طلب الثغرة
+        response = requests.post(target_url, headers=headers, data=payload, proxies=proxies, timeout=20)
         
         if response.status_code == 200:
-            notify(f"🎯 اختراق ناجح! الثغرة تجاوزت نظام الحماية بالكامل.\nالرد: {response.text}")
+            notify(f"🎯 اختراق ناجح! الثغرة تجاوزت الـ 404 والـ 429.\nالرد: {response.text}")
+        elif response.status_code == 429:
+            notify(f"⚠️ البروكسي {proxy} محظور مؤقتاً (429). جرب مرة أخرى.")
         else:
-            notify(f"⚠️ الخادم رد برمز {response.status_code}. قد نحتاج لتغيير الـ App-ID.")
-            
+            notify(f"❌ استجابة غير متوقعة ({response.status_code}): {response.text[:100]}")
+
     except Exception as e:
-        notify(f"⚠️ فشل الحقن عبر {proxy}: {str(e)}")
+        notify(f"⚠️ فشل الحقن: {str(e)}")
 
 if __name__ == "__main__":
-    inject_exploit()
+    inject_final_exploit()
