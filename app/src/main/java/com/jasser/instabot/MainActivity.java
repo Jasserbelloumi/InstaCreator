@@ -10,7 +10,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import com.jasser.instabot.R; // هذا هو السطر الناقص
+import com.jasser.instabot.R;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -27,34 +28,32 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // هذا السطر هو ما كان يسبب الخطأ، الآن سيجد الملف في res/layout
         setContentView(R.layout.activity_main);
 
         statusText = findViewById(R.id.statusText);
         webView = new WebView(this);
-        configureWebView();
-
-        findViewById(R.id.btnCreate).setOnClickListener(v -> startCreationProcess());
-        findViewById(R.id.btnGetCode).setOnClickListener(v -> checkEmails());
-    }
-
-    private void configureWebView() {
+        
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setUserAgentString("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
+        
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 injectData();
             }
         });
+
+        findViewById(R.id.btnCreate).setOnClickListener(v -> startCreationProcess());
+        findViewById(R.id.btnGetCode).setOnClickListener(v -> checkEmails());
     }
 
     private void startCreationProcess() {
         String[] domains = {"1secmail.com", "1secmail.org", "1secmail.net"};
-        emailUser = "user_" + new Random().nextInt(99999);
+        emailUser = "jasser" + new Random().nextInt(9999);
         emailDomain = domains[new Random().nextInt(domains.length)];
-        
         statusText.setText("Email: " + emailUser + "@" + emailDomain);
         setContentView(webView);
         webView.loadUrl("https://www.instagram.com/accounts/emailsignup/");
@@ -64,10 +63,10 @@ public class MainActivity extends AppCompatActivity {
         String pass = "PassBot@" + new Random().nextInt(999);
         String js = "javascript:(function() {" +
                 "var inputs = document.getElementsByTagName('input');" +
-                "if(inputs.length > 0) {" +
+                "if(inputs.length >= 4) {" +
                 "inputs[0].value = '" + emailUser + "@" + emailDomain + "';" +
                 "inputs[1].value = 'Jasser Bot';" +
-                "inputs[2].value = '" + emailUser + "_inst';" +
+                "inputs[2].value = '" + emailUser + "fb';" +
                 "inputs[3].value = '" + pass + "';" +
                 "}" +
                 "})()";
@@ -81,12 +80,8 @@ public class MainActivity extends AppCompatActivity {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 JSONArray json = new JSONArray(rd.readLine());
-                
                 if (json.length() > 0) {
-                    String msgId = json.getJSONObject(0).getString("id");
-                    fetchEmailBody(msgId);
-                } else {
-                    showToast("No code yet, wait 5 seconds...");
+                    fetchEmailBody(json.getJSONObject(0).getString("id"));
                 }
             } catch (Exception e) { e.printStackTrace(); }
         }).start();
@@ -101,16 +96,8 @@ public class MainActivity extends AppCompatActivity {
             String body = msg.getString("body");
             final String code = body.replaceAll("[^0-9]", "");
             if (code.length() >= 6) {
-                final String cleanCode = code.substring(0, 6);
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    statusText.setText("INSTA CODE: " + cleanCode);
-                    Toast.makeText(this, "Code Found: " + cleanCode, Toast.LENGTH_LONG).show();
-                });
+                new Handler(Looper.getMainLooper()).post(() -> statusText.setText("CODE: " + code.substring(0, 6)));
             }
         } catch (Exception e) { e.printStackTrace(); }
-    }
-
-    private void showToast(String msg) {
-        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show());
     }
 }
