@@ -1,13 +1,23 @@
-name: Final Stealth Attack
+name: Final Insta Attack
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  attack:
+  run-bot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - setup-python: '3.9'
-      - run: pip install selenium webdriver-manager requests selenium-stealth
-      - run: python bot.py
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install selenium requests webdriver-manager
+
+      - name: Run Bot
+        run: python bot.py
