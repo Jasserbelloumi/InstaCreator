@@ -3,17 +3,21 @@ package com.jasser.instabot;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
-    private String emailUser, emailDomain;
     private TextView statusText;
+    private String currentEmail, currentPass, currentUser;
+    private ArrayList<String> savedAccounts = new ArrayList<>();
+    private Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,54 +25,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         statusText = findViewById(R.id.statusText);
-        webView = findViewById(R.id.webViewID); // سنضيفه في الـ layout
+        webView = findViewById(R.id.webViewID);
+        Button btnShow = findViewById(R.id.btnShowAccounts);
 
-        WebSettings s = webView.getSettings();
-        s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);
-        s.setUserAgentString("Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36");
-
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                if (url.contains("emailsignup")) {
-                    autoFillRegistration();
-                }
+                runAutomator();
             }
         });
 
-        findViewById(R.id.btnCreate).setOnClickListener(v -> startCreationProcess());
+        findViewById(R.id.btnCreate).setOnClickListener(v -> startAutomation());
+        btnShow.setOnClickListener(v -> Toast.makeText(this, savedAccounts.toString(), Toast.LENGTH_LONG).show());
     }
 
-    private void startCreationProcess() {
-        emailUser = "jasser" + new Random().nextInt(99999);
-        emailDomain = "1secmail.com";
-        statusText.setText("Target Email: " + emailUser + "@" + emailDomain);
+    private void startAutomation() {
+        currentEmail = "jasser" + new Random().nextInt(99999) + "@1secmail.com";
+        currentPass = "PassJasser@" + new Random().nextInt(999);
+        currentUser = "jasser_bot_" + new Random().nextInt(9999);
+        statusText.setText("بدء إنشاء الحساب: " + currentEmail);
         webView.loadUrl("https://www.instagram.com/accounts/emailsignup/");
     }
 
-    private void autoFillRegistration() {
-        String pass = "JasserBot@" + new Random().nextInt(999);
-        String fullName = "Jasser AI Bot";
-        String username = emailUser + "js";
-
-        // كود جافا سكريبت محسن للبحث عن الحقول وملئها
+    private void runAutomator() {
+        // سكربت حقن ذكي للتعامل مع الواجهات المختلفة (مثل التي في الصور)
         String js = "javascript:(function() {" +
-                "var fill = function() {" +
-                "  var inputs = document.querySelectorAll('input');" +
-                "  if(inputs.length >= 4) {" +
-                "    inputs[0].value = '" + emailUser + "@" + emailDomain + "';" +
-                "    inputs[1].value = '" + fullName + "';" +
-                "    inputs[2].value = '" + username + "';" +
-                "    inputs[3].value = '" + pass + "';" +
-                "    console.log('Fields filled!');" +
-                "    var btn = document.querySelector('button[type=\"submit\"]');" +
-                "    if(btn) btn.click();" +
-                "  } else { setTimeout(fill, 2000); }" + // إعادة المحاولة كل ثانيتين
-                "}; fill();" +
+                "  var input = document.querySelector('input[name=\"emailOrPhone\"]') || document.querySelector('input[type=\"text\"]');" +
+                "  if(input && !input.value) {" +
+                "    input.value = '" + currentEmail + "';" +
+                "    var nextBtn = document.querySelector('button[type=\"submit\"]') || document.querySelectorAll('button')[0];" +
+                "    setTimeout(function() { nextBtn.click(); }, 1000);" +
+                "  }" +
+                "  var codeInput = document.querySelector('input[name=\"email_confirmation_code\"]');" +
+                "  if(codeInput) { /* هنا ننتظر الرمز من الخارج */ }" +
                 "})()";
-        
-        new Handler(Looper.getMainLooper()).postDelayed(() -> 
-            webView.evaluateJavascript(js, null), 3000); // انتظر 3 ثواني للتحميل
+        webView.evaluateJavascript(js, null);
     }
 }
