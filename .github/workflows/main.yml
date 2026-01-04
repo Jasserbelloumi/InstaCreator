@@ -1,14 +1,23 @@
-name: Stealth InstaBot
+name: InstaBot Cloud
 on:
   push:
-  workflow_dispatch: # يسمح لك بتشغيله يدوياً من GitHub
+  workflow_dispatch:
 
 jobs:
-  build:
+  run-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - setup-python: '3.9'
-      - run: pip install selenium requests
-      - name: Start Bot
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install selenium requests webdriver-manager
+
+      - name: Execution
         run: python bot.py
