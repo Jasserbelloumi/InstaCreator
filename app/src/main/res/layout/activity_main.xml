@@ -1,31 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/statusText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ready to Start"
-        android:textSize="18sp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp" />
+        android:text="Ready"
+        android:gravity="center"
+        android:padding="10dp"/>
 
     <Button
         android:id="@+id/btnCreate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Account Creation"
-        android:layout_centerInParent="true" />
+        android:text="انشاء حساب تلقائي"/>
 
-    <Button
-        android:id="@+id/btnGetCode"
+    <WebView
+        android:id="@+id/webViewID"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Check Email for Code"
-        android:layout_below="@id/btnCreate"
-        android:layout_marginTop="20dp" />
-
-</RelativeLayout>
+        android:layout_height="match_parent" />
+</LinearLayout>
