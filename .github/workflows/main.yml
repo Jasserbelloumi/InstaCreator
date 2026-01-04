@@ -1,19 +1,13 @@
-name: Pro Shield Breaker
+name: Final Stealth Attack
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  run-bot:
+  attack:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install Stealth Tools
-        run: |
-          pip install selenium webdriver-manager requests
-      - name: Execute Attack
-        run: python bot.py
+      - setup-python: '3.9'
+      - run: pip install selenium webdriver-manager requests selenium-stealth
+      - run: python bot.py
