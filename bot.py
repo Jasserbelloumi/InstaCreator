@@ -1,73 +1,79 @@
 import time
 import random
 import requests
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
-TOKEN = "7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc"
-CHAT_ID = "5653032481"
+TOKEN = '7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc'
+CHAT_ID = '5653032481'
 
 def notify(msg, img=None):
     try:
-        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={'chat_id': CHAT_ID, 'text': msg})
-        if img:
+        requests.post(f'https://api.telegram.org/bot{TOKEN}/sendMessage', data={'chat_id': CHAT_ID, 'text': msg})
+        if img and os.path.exists(img):
             with open(img, 'rb') as f:
-                requests.post(f"https://api.telegram.org/bot{TOKEN}/sendPhoto", data={'chat_id': CHAT_ID}, files={'photo': f})
+                requests.post(f'https://api.telegram.org/bot{TOKEN}/sendPhoto', data={'chat_id': CHAT_ID}, files={'photo': f})
     except: pass
 
-def start_attack():
-    # استخدام البروكسي الذي نجح معك
-    proxy = "177.93.49.203:999"
-    notify(f"🛡️ محاولة تجاوز الحظر الداخلي باستخدام البروكسي الناجح: {proxy}")
-
+def run_pro_bot():
+    # استخدام البروكسيات الذهبية التي حفظناها
+    proxy = random.choice(['177.93.49.203:999', '103.172.42.105:1111'])
+    notify(f'🚀 محاولة الدخول المتخفي عبر: {proxy}')
+    
     options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument(f'--proxy-server=http://{proxy}')
     
-    # إعدادات التخفي المتقدمة
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    # حماية ضد الكشف
+    options.add_argument('--disable-blink-features=AutomationControlled')
+    options.add_experimental_option('excludeSwitches', ['enable-automation'])
     options.add_experimental_option('useAutomationExtension', False)
     
-    # بصمة iPhone 15 Pro Max (الأحدث والأكثر ثقة)
-    ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1"
-    options.add_argument(f"user-agent={ua}")
+    # بصمة آيفون 16 حديثة
+    ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+    options.add_argument(f'user-agent={ua}')
 
     driver = webdriver.Chrome(options=options)
-
-    # كود حقن لتعطيل كاشفات السيلينيوم تماماً
-    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": """
+    
+    # حقن كود التخفي (Stealth Injection)
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': '''
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
             window.chrome = { runtime: {} };
             Object.defineProperty(navigator, 'languages', {get: () => ['ar-SA', 'en-US']});
             Object.defineProperty(navigator, 'vendor', {get: () => 'Apple Computer, Inc.'});
-        """
+        '''
     })
 
     try:
-        # الدخول ببطء لمحاكاة سرعة الإنسان
-        driver.get("https://www.instagram.com/accounts/emailsignup/")
-        time.sleep(random.randint(10, 20)) 
+        driver.get('https://www.instagram.com/accounts/emailsignup/')
         
-        # محاكاة حركة عشوائية (Scroll) قبل أي فعل
-        driver.execute_script("window.scrollTo(0, 200);")
-        time.sleep(2)
+        # انتظار بشري عشوائي
+        time.sleep(random.randint(15, 25))
         
-        driver.save_screenshot("bypass_result.png")
+        driver.save_screenshot('result.png')
         
-        if "429" in driver.page_source or "blocked" in driver.page_source.lower():
-            notify("❌ البروكسي فتح الصفحة لكن إنستا كشف "بصمة البوت". أحتاج لتغيير إستراتيجية الحقن.", "bypass_result.png")
+        source = driver.page_source.lower()
+        if '429' in source or 'something went wrong' in source:
+            notify('❌ لا يزال هناك حظر IP أو كشف للبصمة.', 'result.png')
         else:
-            notify("🔥 نجاح باهر! تم فتح الواجهة وتجاوز الحظر تماماً!", "bypass_result.png")
-            # هنا يبدأ كود الملء التلقائي...
+            notify('🔥 مبروك! تم فتح صفحة التسجيل بنجاح دون كشف البوت.', 'result.png')
+            
+            # محاكاة حركة الماوس لزيادة الثقة
+            action = ActionChains(driver)
+            action.move_by_offset(random.randint(10, 100), random.randint(10, 100)).perform()
 
     except Exception as e:
-        notify(f"⚠️ خطأ غير متوقع: {str(e)}")
+        notify(f'⚠️ فشل السكربت: {str(e)}')
     finally:
         driver.quit()
 
-if __name__ == "__main__":
-    start_attack()
+if __name__ == '__main__':
+    run_pro_bot()
