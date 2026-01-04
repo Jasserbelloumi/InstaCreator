@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.jasser.instabot.R; // هذا هو السطر الناقص
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -50,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCreationProcess() {
-        // توليد بريد وهمي عشوائي
         String[] domains = {"1secmail.com", "1secmail.org", "1secmail.net"};
         emailUser = "user_" + new Random().nextInt(99999);
         emailDomain = domains[new Random().nextInt(domains.length)];
@@ -99,13 +99,14 @@ public class MainActivity extends AppCompatActivity {
             BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             JSONObject msg = new JSONObject(rd.readLine());
             String body = msg.getString("body");
-            // استخراج 6 أرقام (رمز إنستا)
-            final String code = body.replaceAll("[^0-9]", "").substring(0, 6);
-            
-            new Handler(Looper.getMainLooper()).post(() -> {
-                statusText.setText("INSTA CODE: " + code);
-                Toast.makeText(this, "Code Found: " + code, Toast.LENGTH_LONG).show();
-            });
+            final String code = body.replaceAll("[^0-9]", "");
+            if (code.length() >= 6) {
+                final String cleanCode = code.substring(0, 6);
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    statusText.setText("INSTA CODE: " + cleanCode);
+                    Toast.makeText(this, "Code Found: " + cleanCode, Toast.LENGTH_LONG).show();
+                });
+            }
         } catch (Exception e) { e.printStackTrace(); }
     }
 
