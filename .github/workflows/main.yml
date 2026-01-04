@@ -1,24 +1,14 @@
-name: InstaBot Script
+name: Stealth InstaBot
 on:
   push:
-  schedule:
-    - cron: '*/30 * * * *' # يعمل كل 30 دقيقة تلقائياً
+  workflow_dispatch: # يسمح لك بتشغيله يدوياً من GitHub
 
 jobs:
-  run-bot:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install Chrome & Dependencies
-        run: |
-          pip install selenium requests
-          
-      - name: Run Script
+      - uses: actions/checkout@v3
+      - setup-python: '3.9'
+      - run: pip install selenium requests
+      - name: Start Bot
         run: python bot.py
