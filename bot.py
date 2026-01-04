@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 
 TOKEN = "7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc"
 CHAT_ID = "5653032481"
@@ -17,82 +16,54 @@ def notify(msg, img=None):
                 requests.post(f"https://api.telegram.org/bot{TOKEN}/sendPhoto", data={'chat_id': CHAT_ID}, files={'photo': f})
     except: pass
 
-def human_type(element, text):
-    """محاكاة الكتابة البشرية حرف بحرف"""
-    for char in text:
-        element.send_keys(char)
-        time.sleep(random.uniform(0.1, 0.4))
-
-def run_iphone_bot():
-    notify("📱 تم تشغيل السكربت بنمط التخفي (iPhone 14 Pro)...")
-    
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    
-    # بصمة آيفون كاملة
-    iphone_ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1"
-    options.add_argument(f"user-agent={iphone_ua}")
-    
-    # إخفاء خصائص الأتمتة تماماً
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
-
-    driver = webdriver.Chrome(options=options)
-    
-    # تعديل خصائص المتصفح ليبدو كآيفون حقيقي
-    driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": iphone_ua})
-    driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['ar-SA', 'ar', 'en-US', 'en']})")
-    driver.execute_script("Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'})")
-
+def get_free_proxies():
+    """جلب قائمة بروكسيات مجانية لكسر حظر IP"""
     try:
-        driver.get("https://www.instagram.com/accounts/emailsignup/")
-        time.sleep(random.randint(7, 12))
-        
-        driver.save_screenshot("iphone_view.png")
-        
-        if "429" in driver.page_source:
-            notify("❌ حظر IP (429) مستمر. إنستقرام يرفض خادم GitHub.", "iphone_view.png")
-            return
+        response = requests.get("https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all")
+        return response.text.split('\r\n')
+    except: return []
 
-        # بيانات عشوائية
-        rand = random.randint(1000, 9999)
-        email = f"jasser_pro{rand}@1secmail.com"
-        username = f"jasser.ios.{rand}"
-        password = f"Jasser!{rand}@Pro"
+def run_broken_shield():
+    notify("⚔️ محاولة كسر الحماية باستخدام نظام البروكسي المتغير...")
+    
+    proxies = get_free_proxies()
+    random.shuffle(proxies)
+    
+    for proxy in proxies[:10]: # تجربة أفضل 10 بروكسيات
+        if not proxy: continue
+        
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument(f'--proxy-server={proxy}')
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--window-size=1920,1080")
+        
+        # بصمة آيفون متغيرة
+        ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+        options.add_argument(f"user-agent={ua}")
 
-        wait = WebDriverWait(driver, 20)
-        
-        # ملء البريد
-        email_input = wait.until(EC.presence_of_element_located((By.NAME, "emailOrPhone")))
-        human_type(email_input, email)
-        time.sleep(random.uniform(1, 3))
-        
-        # ملء الاسم
-        name_input = driver.find_element(By.NAME, "fullName")
-        human_type(name_input, "Jasser User")
-        
-        # ملء اليوزر والباسورد
-        human_type(driver.find_element(By.NAME, "username"), username)
-        human_type(driver.find_element(By.NAME, "password"), password)
-        
-        time.sleep(2)
-        
-        # النقر كبشري (تحريك الماوس للزر ثم الضغط)
-        submit_btn = driver.find_element(By.XPATH, "//button[@type='submit']")
-        ActionChains(driver).move_to_element(submit_btn).click().perform()
-        
-        time.sleep(10)
-        driver.save_screenshot("final_step.png")
-        notify(f"✅ تم إدخال البيانات بنجاح!\nUser: {username}\nPass: {password}", "final_step.png")
+        try:
+            driver = webdriver.Chrome(options=options)
+            driver.set_page_load_timeout(30)
+            
+            print(f"Trying Proxy: {proxy}")
+            driver.get("https://www.instagram.com/accounts/emailsignup/")
+            time.sleep(10)
+            
+            driver.save_screenshot("bypass_attempt.png")
+            
+            if "429" not in driver.page_source and "Instagram" in driver.title:
+                notify(f"🔥 تم كسر الحماية باستخدام البروكسي: {proxy}", "bypass_attempt.png")
+                # هنا يكمل السكربت عملية التسجيل...
+                break
+            else:
+                print("Still blocked or proxy slow, trying next...")
+                driver.quit()
+        except:
+            print("Proxy connection failed, retrying...")
+            continue
 
-    except Exception as e:
-        driver.save_screenshot("crash_report.png")
-        notify(f"⚠️ خطأ: {str(e)}", "crash_report.png")
-    finally:
-        driver.quit()
+    notify("🏁 انتهت محاولات كسر الحماية. إذا لم تنجح، نحتاج بروكسي مدفوع (Residential).")
 
 if __name__ == "__main__":
-    run_iphone_bot()
+    run_broken_shield()
