@@ -1,79 +1,51 @@
-import time
-import random
 import requests
-import os
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
+import random
+import time
 
-TOKEN = '7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc'
-CHAT_ID = '5653032481'
+# بيانات التليجرام
+TOKEN = "7665591962:AAFIIe-izSG4rd71Kruf0xmXM9j11IYdHvc"
+CHAT_ID = "5653032481"
 
-def notify(msg, img=None):
-    try:
-        requests.post(f'https://api.telegram.org/bot{TOKEN}/sendMessage', data={'chat_id': CHAT_ID, 'text': msg})
-        if img and os.path.exists(img):
-            with open(img, 'rb') as f:
-                requests.post(f'https://api.telegram.org/bot{TOKEN}/sendPhoto', data={'chat_id': CHAT_ID}, files={'photo': f})
-    except: pass
+def notify(msg):
+    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={'chat_id': CHAT_ID, 'text': msg})
 
-def run_pro_bot():
-    # استخدام البروكسيات الذهبية التي حفظناها
-    proxy = random.choice(['177.93.49.203:999', '103.172.42.105:1111'])
-    notify(f'🚀 محاولة الدخول المتخفي عبر: {proxy}')
-    
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument(f'--proxy-server=http://{proxy}')
-    
-    # حماية ضد الكشف
-    options.add_argument('--disable-blink-features=AutomationControlled')
-    options.add_experimental_option('excludeSwitches', ['enable-automation'])
-    options.add_experimental_option('useAutomationExtension', False)
-    
-    # بصمة آيفون 16 حديثة
-    ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
-    options.add_argument(f'user-agent={ua}')
+def exploit_signup():
+    # البروكسي الذي نجح معك سابقاً
+    proxy = "177.93.49.203:999"
+    proxies = {"http": f"http://{proxy}", "https": f"http://{proxy}"}
 
-    driver = webdriver.Chrome(options=options)
-    
-    # حقن كود التخفي (Stealth Injection)
-    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
-        'source': '''
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            window.chrome = { runtime: {} };
-            Object.defineProperty(navigator, 'languages', {get: () => ['ar-SA', 'en-US']});
-            Object.defineProperty(navigator, 'vendor', {get: () => 'Apple Computer, Inc.'});
-        '''
-    })
+    # هذه هي "الثغرة": محاكاة ترويسات تطبيق إنستقرام الرسمي تماماً
+    headers = {
+        "User-Agent": "Instagram 311.1.0.32.118 Android (30/11; 480dpi; 1080x2214; samsung; SM-G998B; o1q; exynos2100; en_US; 546937511)",
+        "X-IG-App-ID": "936619743392459", # ID تطبيق الويب الرسمي
+        "X-ASBD-ID": "129477",
+        "X-IG-WWW-Claim": "0",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "*/*",
+    }
+
+    # بيانات الحساب الجديد
+    user_id = random.randint(100, 999)
+    data = {
+        "email": f"jasser.pro{user_id}@1secmail.com",
+        "first_name": "Jasser Pro",
+        "username": f"jasser_exploit_{user_id}",
+        "opt_into_hashtags": "false",
+    }
 
     try:
-        driver.get('https://www.instagram.com/accounts/emailsignup/')
+        # محاولة إرسال طلب "فحص اليوزر" أولاً (لخداع النظام)
+        check_url = "https://www.instagram.com/api/v1/web/accounts/check_username/"
+        res = requests.post(check_url, headers=headers, data={"username": data["username"]}, proxies=proxies, timeout=15)
         
-        # انتظار بشري عشوائي
-        time.sleep(random.randint(15, 25))
-        
-        driver.save_screenshot('result.png')
-        
-        source = driver.page_source.lower()
-        if '429' in source or 'something went wrong' in source:
-            notify('❌ لا يزال هناك حظر IP أو كشف للبصمة.', 'result.png')
+        if res.status_code == 200:
+            notify(f"🎯 الثغرة نجحت في تخطي الحظر! اليوزر متاح: {data['username']}")
+            # هنا ننتقل لخطوة التسجيل الفعلي
         else:
-            notify('🔥 مبروك! تم فتح صفحة التسجيل بنجاح دون كشف البوت.', 'result.png')
+            notify(f"❌ الموقع كشف الطلب (Status: {res.status_code}). الـ IP لا يزال مراقباً.")
             
-            # محاكاة حركة الماوس لزيادة الثقة
-            action = ActionChains(driver)
-            action.move_by_offset(random.randint(10, 100), random.randint(10, 100)).perform()
-
     except Exception as e:
-        notify(f'⚠️ فشل السكربت: {str(e)}')
-    finally:
-        driver.quit()
+        notify(f"⚠️ خطأ في الاتصال بالثغرة: {str(e)}")
 
-if __name__ == '__main__':
-    run_pro_bot()
+if __name__ == "__main__":
+    exploit_signup()
